@@ -1,0 +1,7 @@
+generator: "Gen3"
+model_version: "gen3a_turbo"
+duration: 5
+ratio: "1280:768"
+prompt_enhancement: True
+openai_key_dir: "/sotossta/DecepTIV/keys/API_KEY_OPENAI"
+runwayml_key_dir: "/sotossta/DecepTIV/keys/API_KEY_GEN3"

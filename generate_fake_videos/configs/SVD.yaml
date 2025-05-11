@@ -1,0 +1,6 @@
+generator: "SVD"
+cpu_offload: True
+inference_steps: 25
+n_frames: 25
+decode_chunk_size: 8
+save_fps: 8

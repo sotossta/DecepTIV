@@ -1,0 +1,9 @@
+generator: "CogVideo"
+mode: "T2V"
+cpu_offload: False
+inference_steps: 50
+n_frames: 49
+guidance_scale: 6.0
+save_fps: 8
+prompt_enhancement: False
+openai_key_dir: "/sotossta/DecepTIV/keys/API_KEY_OPENAI"

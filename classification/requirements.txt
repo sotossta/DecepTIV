@@ -1,0 +1,14 @@
+argparse
+pyyaml 
+torch
+scikit-learn
+tqdm
+numpy
+opencv-python
+efficientnet_pytorch
+Pillow
+torchvision
+pandas
+timm
+ftfy
+regex

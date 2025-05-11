@@ -1,0 +1,5 @@
+generator: "Luma"
+model_version: "ray-flash-2"
+prompt_enhancement: True
+openai_key_dir: "/sotossta/DecepTIV/keys/API_KEY_OPENAI"
+luma_key_dir: "/sotossta/DecepTIV/keys/API_KEY_LUMA"
