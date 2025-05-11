@@ -85,7 +85,7 @@ def main(args):
     model = load_model_from_config(config)
     model = load_checkpoint(config = config, model = model, base_dir = args.base_dir, ckpt_dir = args.ckpt_dir)
     all_datasets = ["HunyuanVideo", "Open-Sora", "EasyAnimate_I2V", "EasyAnimate_T2V",
-                   "DynamiCrafter", "SVD","CogVideo_T2V","CogVideo_I2V", "Wan2.1", "Luma", "Runway-Gen3"]
+                   "DynamiCrafter", "SVD","CogVideo_T2V","CogVideo_I2V", "Wan2.1", "Luma", "Gen3"]
     results = []
     if args.dataset == "all":
         datasets = all_datasets
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     p.add_argument("--base_dir", type=str, default="/sotossta/DecepTIV", help="The base directory")
     p.add_argument('--dataset', type=str,choices= ["CogVideo_T2V", "CogVideo_I2V","Open-Sora","SVD","HunyuanVideo",
                                                    "EasyAnimate_T2V","EasyAnimate_I2V","DynamiCrafter", "Luma",
-                                                   "Runway-Gen3","Wan2.1","all"])
+                                                   "Gen3","Wan2.1","all"])
     p.add_argument("--category", type=str, choices=["Firefighter", "Weather", "Soldier", "all"], default="Firefighter",
                    help="Category of dataset")
     p.add_argument('--perturbed', type=int,choices= [0,1],default=0)  

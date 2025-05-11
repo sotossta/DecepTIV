@@ -119,9 +119,9 @@ sh test.sh
 ```
 The shell script contains the following variables that can be altered:
 
-1. `trained_on`: the generator that our given detector was trained on e.g. `all` or `HunyuanVideo`
-2. `trained_category`: the category of videos that the detector was trained on e.g. `Firefighter` or `Soldier`
-3. `test_dataset`: choose testing videos from a specific generator  `all` or `Gen3`
+1. `trained_on`: the generator that our given detector was trained on e.g. `all`, `HunyuanVideo`, etc
+2. `trained_category`: the category of videos that the detector was trained on e.g. `Firefighter`, `Soldier`, etc
+3. `test_dataset`: choose testing videos from a specific generator e.g. `all`, `Gen3`, etc
 4. `test_category`: choose category of testing videos_pert
 5. `perturbed`: choose to test on perturbed videos or not
 6. `weights`: name of the model checkpoint e.g. `model_epoch4_val0.9977.tar`
