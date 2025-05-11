@@ -1,4 +1,3 @@
-
 # Define variables
 trained_on="all"
 trained_category="all"
@@ -13,7 +12,7 @@ python test.py \
     --dataset "${test_dataset}"\
     --category "${test_category}" \
     --perturbed "${perturbed}" \
-    --frames_sampled 10 \
+    --frames_sampled 42 \
     --detector_config '/sotossta/DecepTIV/classification/configs/f3net.yaml' \
     --ckpt_dir "${trained_on}/${trained_category}" \
     --ckpt_weights "${weights}" 
