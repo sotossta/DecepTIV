@@ -1,9 +1,8 @@
-generator: "CogVideo"
-mode: "T2V"
+generator: "Wan"
 cpu_offload: True
 inference_steps: 50
-n_frames: 49
-guidance_scale: 6.0
-save_fps: 8
+n_frames: 81
+guidance_scale: 5.0
+save_fps: 15
 prompt_enhancement: False
 openai_key_dir: "/sotossta/DecepTIV/generate_fake_videos/keys/API_KEY_OPENAI"
