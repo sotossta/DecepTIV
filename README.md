@@ -1,7 +1,7 @@
-# DecepTIV: Learning to Detect T2V and I2V Videos
+# DecepTIV: DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos
 
 
-Official code of: DecepTIV: Learning to Detect T2V and I2V Videos
+Official code of: DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos
 
 
 
