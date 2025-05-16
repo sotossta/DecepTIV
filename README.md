@@ -178,3 +178,7 @@ python inference.py \
 
 - Note that to generate videos from the API based models, API keys from [Gen3](https://dev.runwayml.com/) and [Luma](https://lumalabs.ai/api) must be generated and saved as `/sotossta/DecepTIV/generate_fake_videos/keys/API_KEY_GEN3` and `/sotossta/DecepTIV/generate_fake_videos/keys/API_KEY_LUMA`
 ---
+
+## License
+
+This dataset is licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) license.
