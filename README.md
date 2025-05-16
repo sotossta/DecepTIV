@@ -1,4 +1,4 @@
-# DecepTIV: DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos
+# DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos
 
 
 Official code of: DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos
