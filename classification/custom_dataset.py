@@ -7,10 +7,12 @@ import numpy as np
 
 class CustomDataset(Dataset):
 
-    def __init__(self, root_dir, transform = None, split_file= None,frames_sampled=48):
+    def __init__(self, root_dir, transform = None, split_file= None,frames_sampled=48, perturbation_fn=None, perturbation_param=None):
 
         self.root_dir = root_dir
         self.transform = transform
+        self.perturbation_fn = perturbation_fn
+        self.perturbation_param = perturbation_param
         self.image_paths = []  # List to store paths of all images
         self.labels = []  # List to store corresponding folder names 
         folders=split_file 
@@ -28,7 +30,11 @@ class CustomDataset(Dataset):
         
         image_path = os.path.join(self.root_dir,self.image_paths[idx])
         image = cv2.imread(image_path)
+        #print(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Apply perturbation if specified
+        if self.perturbation_fn is not None:
+            image = self.perturbation_fn(image, self.perturbation_param)
         if self.transform:
             image = self.transform(Image.fromarray(np.uint8(image)).convert('RGB'))
 

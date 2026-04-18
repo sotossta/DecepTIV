@@ -3,6 +3,7 @@ from os.path import join, exists
 import argparse
 import cv2
 from tqdm import tqdm
+import numpy as np
 
 def extract_frames(data_path, output_path,max_frames):
     os.makedirs(output_path, exist_ok=True)
@@ -22,7 +23,8 @@ def extract_frames(data_path, output_path,max_frames):
 def extract_videos(args):
     datasets = [args.dataset] if args.dataset != "all" else [
         "Real", "CogVideo_T2V", "CogVideo_I2V", "Open-Sora", "SVD", "HunyuanVideo",
-        "EasyAnimate_T2V", "EasyAnimate_I2V", "DynamiCrafter", "Wan2.1", "Luma", "Gen3", 
+        "EasyAnimate_T2V", "EasyAnimate_I2V", "DynamiCrafter", "Wan2.1", "Luma", "Gen3",
+        "Veo3-T2V", "Veo3-I2V", "Sora2-T2V", "Sora2-I2V",
     ]
     categories = ["Firefighter", "Weather", "Soldier"] if args.category == "all" else [args.category]
     video_files = []
@@ -41,7 +43,16 @@ def extract_videos(args):
             if not exists(videos_path):
                 print(f"Skipping {dataset}/{category}: No videos found.")
                 continue
-            for video in os.listdir(videos_path):
+
+            if args.test_only:
+       
+                split_file = np.loadtxt(join(args.base_dir,dataset,category,"splits","test.txt"), dtype=str).tolist()
+                videos_list = [element+".mp4" for element in split_file]
+            else:
+ 
+                videos_list = os.listdir(videos_path)
+            for video in videos_list:
+                
                 video_name = video.split(".")[0]
                 video_output_path = join(images_path, video_name)
                 video_files.append((video, videos_path, video_output_path, dataset, category))
@@ -63,9 +74,11 @@ if __name__ == '__main__':
                    help="Category of dataset")
     p.add_argument('--dataset', '-d', type=str, choices=
                     ["Real", "CogVideo_T2V", "CogVideo_I2V", "Open-Sora", "SVD", "HunyuanVideo",
-                    "EasyAnimate_T2V", "EasyAnimate_I2V", "DynamiCrafter","Wan2.1","Luma", "Gen3","all"], required=True)
+                    "EasyAnimate_T2V", "EasyAnimate_I2V", "DynamiCrafter","Wan2.1","Luma", "Gen3",
+                    "Veo3-T2V", "Veo3-I2V", "Sora2-T2V", "Sora2-I2V","all"], required=True)
     p.add_argument("--max_frames", type=int, default=50, help="Maximum number of frames to extract from each video")
     p.add_argument("--perturbed", type=int, default=0)
+    p.add_argument("--test_only", action="store_true")
     
     args = p.parse_args()
     print(args)

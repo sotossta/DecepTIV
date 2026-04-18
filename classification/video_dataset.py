@@ -4,14 +4,17 @@ from torch.utils.data import Dataset
 import cv2
 import torch
 import random
+import numpy as np
 
 class VideoDataset(Dataset):
-    def __init__(self, root_dir, detector_name, transform=None, split_file=None, clip_size=8, clips_sampled=2):
+    def __init__(self, root_dir, detector_name, transform=None, split_file=None, clip_size=8, clips_sampled=2, perturbation_fn = None, perturbation_param = None):
         self.root_dir = root_dir
         self.transform = transform
         self.clip_size = clip_size
         self.clips_sampled = clips_sampled
         self.detector_name = detector_name
+        self.perturbation_fn = perturbation_fn
+        self.perturbation_param = perturbation_param
         self.video_clip_index = []  # List of (video_folder, start_idx)
         self.video_frames = {}  # Cache frame file lists
         for folder_name in split_file:
@@ -48,7 +51,7 @@ class VideoDataset(Dataset):
     def __getitem__(self, idx):
         video_folder, start_idx = self.video_clip_index[idx]
         frame_files = self.video_frames[video_folder]
-     
+       
         # Handle short videos
         if start_idx + self.clip_size > len(frame_files):
             clip_files = frame_files + [frame_files[-1]] * (self.clip_size - len(frame_files))
@@ -59,6 +62,9 @@ class VideoDataset(Dataset):
         for frame_path in clip_files:
             image = cv2.imread(frame_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # Apply perturbation if specified
+            if self.perturbation_fn is not None:
+                image = self.perturbation_fn(image, self.perturbation_param)
             if self.transform:
                 image = self.transform(Image.fromarray(image).convert('RGB'))
             frames.append(image)

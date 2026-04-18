@@ -1,5 +1,6 @@
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
+from torch.nn import functional as F
 import numpy as np
 import os
 import re
@@ -13,7 +14,7 @@ class Trainer(object):
         optimizer,
         dataset,
         category,
-        balanced
+        balanced,
         ):
 
         self.config = config
@@ -61,7 +62,14 @@ class Trainer(object):
 
     def save_model(self, epoch, val_auc):
 
-        save_dir = os.path.join(self.config['save_dir'], self.config['model']['name'], self.dataset, self.category)
+        print(f'Validation AUC {val_auc:.4f}', flush=True)
+
+        if self.config['model']['name'] == "Clip_VPT":
+            save_dir = os.path.join(self.config['save_dir'], 
+                                self.config['model']['name'] + "_" + self.config["model"]["type"] + str(self.config["backbone"]["prompt_length"]),
+                                 self.dataset, self.category)
+        else:   
+            save_dir = os.path.join(self.config['save_dir'], self.config['model']['name'], self.dataset,self.category)
         os.makedirs(save_dir, exist_ok=True)  # Ensure directory exists
 
         # Regular expression to extract AUC score from filename
@@ -74,16 +82,38 @@ class Trainer(object):
             if match:
                 existing_auc = float(match.group(1))
                 existing_models[os.path.join(save_dir, filename)] = existing_auc
-        # Check if current model has the highest AUC
+        # Save only if current model has the highest AUC
         if not existing_models or val_auc > max(existing_models.values()):
             # Delete all models with a lower AUC
             for file_path, auc in existing_models.items():
                 if auc < val_auc:
                     os.remove(file_path)
-            # Save the new model
+
+            if self.config['model']['name'] == "Clip_VPT":
+                state_to_save = {
+                'prompts': self.model.prompts,
+                'fc': self.model.fc.state_dict(),
+                'epoch': epoch
+                }
+            elif self.config['model']['name'] == "Universal_FD":
+                state_to_save = {
+                'fc': self.model.fc.state_dict(),
+                'epoch': epoch
+                }
+            elif self.config['model']['name'] == "UNITE":
+                state_to_save = {
+                'video_transformer': self.model.vid_transformer.state_dict(),
+                'fc': self.model.fc.state_dict(),
+                'epoch': epoch
+                }
+            else:
+                state_to_save = self.model.state_dict()
+
             save_model_path = os.path.join(save_dir, f'model_epoch{epoch}_val{val_auc:.4f}.tar')
-            torch.save({'model': self.model.state_dict(), 'epoch': epoch}, save_model_path)
+            torch.save({'model': state_to_save, 'epoch': epoch}, save_model_path)
             print(f'Saving model from epoch {epoch} with AUC {val_auc:.4f}', flush=True)
+        else:
+            print(f'No improvement (AUC {val_auc:.4f}), checkpoint not saved.', flush=True)
 
     
     def train_epoch(self,epoch,train_loader,val_loader):

@@ -21,15 +21,15 @@ def get_dataloaders(base_dir, dataset, category, frames_sampled, config, balance
     if balanced ==0:
             frames_sampled_fake = frames_sampled_real
     else:
-        if dataset in ["Open-Sora", "HunyuanVideo"]:
+        if dataset in ["Open-Sora", "HunyuanVideo", "all"]:
             frames_sampled_fake = frames_sampled_real
         elif dataset in ["EasyAnimate_T2V", "EasyAnimate_I2V"]:
             frames_sampled_fake = frames_sampled_real//2
         elif dataset in ["SVD", "DynamiCrafter"]:
-            frames_sampled_fake = frames_sampled_real//3  
+            frames_sampled_fake = frames_sampled_real//3
         else:
-            frames_sampled_fake = frames_sampled_real//12
-    if config['model']['name'] in ["TallSwin", "FTCN"]:
+            frames_sampled_fake = max(1, frames_sampled_real//12)
+    if config['model']['name'] in ["TallSwin", "FTCN", "DeMamba", "UNITE"]:
 
         train_dataset_real = VideoDataset(root_dir = base_dir,
                                detector_name=config['model']['name'],
@@ -81,12 +81,10 @@ def get_dataloaders(base_dir, dataset, category, frames_sampled, config, balance
                                 split_file = split_file_fake_val,
                                 frames_sampled=frames_sampled_fake,
                                 )                           
-    
- 
     train_dataset = ConcatDataset([train_dataset_real,train_dataset_fake])
     val_dataset = ConcatDataset([val_dataset_real,val_dataset_fake])   
     train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               shuffle=True,
+                                               shuffle = True,
                                                batch_size= config['train_batchsize']
                                                )
     val_loader = torch.utils.data.DataLoader(val_dataset,
@@ -100,7 +98,7 @@ def get_dataloaders(base_dir, dataset, category, frames_sampled, config, balance
     print(f"Fake Videos: 1) Training:  {len(train_dataset_fake)} frames from {len(split_file_fake_train)} videos 2) Validation: {len(val_dataset_fake)} frames from {len(split_file_fake_val)} videos ")
     return train_loader,val_loader
 
-def get_dataloaders_testing(base_dir, dataset, category, frames_sampled, perturbed,config):
+def get_dataloaders_testing(base_dir, dataset, category, frames_sampled, perturbed,config, perturbation_fn,perturbation_param, cross_dataset = "None"):
 
     #------------------------Define transformations -------------------
     TRANSFORM_IMG = transforms.Compose([
@@ -109,24 +107,25 @@ def get_dataloaders_testing(base_dir, dataset, category, frames_sampled, perturb
         transforms.Normalize(mean=config['mean'], std= config['std'])
     ])
 
-    split_file_test = get_dirs(dir = base_dir, dataset = dataset, category = category, split_type = "test", perturbed=perturbed)
-    if config['model']['name'] in ["TallSwin", "FTCN"]:
+    split_file_test = get_dirs(dir = base_dir, dataset = dataset, category = category, split_type = "test", perturbed=perturbed, cross_dataset = cross_dataset)
+    if config['model']['name'] in ["TallSwin", "FTCN", "DeMamba", "UNITE"]:
 
         test_dataset = VideoDataset(root_dir = base_dir,
                                detector_name=config['model']['name'],
                                transform=TRANSFORM_IMG,
                                split_file = split_file_test,
                                clip_size = config['backbone']['clip_size'],
-                               clips_sampled =  frames_sampled         
+                               clips_sampled =  frames_sampled,
+                               perturbation_fn = perturbation_fn,
+                               perturbation_param = perturbation_param       
                                )
-
-
     else:
         test_dataset = CustomDataset(root_dir = base_dir,
                                 transform=TRANSFORM_IMG,
                                 split_file = split_file_test,
-                                frames_sampled=frames_sampled              
+                                frames_sampled=frames_sampled,
+                                perturbation_fn = perturbation_fn,
+                                perturbation_param = perturbation_param              
                                 )
     test_loader = torch.utils.data.DataLoader(test_dataset,batch_size= config['test_batchsize'])
     return test_loader
-

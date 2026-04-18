@@ -15,15 +15,18 @@ def main(args):
     # prepare the model (detector)
     model = load_model_from_config(config)
     # prepare the optimizer
+    print(f"Learning Rate: {config['optimizer'][config['optimizer']['type']]['lr']}")
     optimizer = choose_optimizer(model, config)
     #-------------------- Define dataloaders -------------------
     train_loader, val_loader= get_dataloaders(base_dir=os.path.join(args.base_dir,"Dataset"), dataset=args.dataset, category=args.category,
                                              frames_sampled=args.frames_sampled_real, balanced = args.balanced, config=config)
     # prepare the metric
+    config = config.copy()  # create a copy of config to avoid altering the original one
+    config['save_dir'] = os.path.join(args.base_dir,"classification/ckpts")  # specify save_dir for model
     # prepare the trainer
     trainer = Trainer(config, model, optimizer, dataset=args.dataset,category = args.category,balanced=args.balanced)
     # start training
-    for epoch in range(config['start_epoch'], config['nEpochs'] + 1):
+    for epoch in range(config['start_epoch'], config['nEpochs']):
 
         print(f"Training epoch: {epoch}")
         trainer.model.epoch = epoch

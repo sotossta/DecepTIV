@@ -9,7 +9,8 @@ from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 from prepare_data import get_dataloaders_testing
-from utils import load_model_from_config, init_seed, load_checkpoint, EER
+from utils import (load_model_from_config, init_seed, load_checkpoint, EER,
+                     get_pert_function, get_pert_parameter, save_results)
 import pandas as pd
 
 def get_predictions(args,model,loader):
@@ -34,7 +35,6 @@ def get_predictions(args,model,loader):
     for vid, pred, label in zip(video_ids, predictions, true_labels):
         video_predictions[vid].append(pred)
         video_true_labels[vid].append(label)
-    
     # Aggregate predictions and true labels for each video
     video_predictions = {vid: np.mean(preds) for vid, preds in video_predictions.items()}
     video_true_labels = {vid: np.mean(labels) for vid, labels in video_true_labels.items()}  # Average labels
@@ -42,7 +42,6 @@ def get_predictions(args,model,loader):
     video_preds = np.array(list(video_predictions.values()))
     video_labels = np.array(list(video_true_labels.values()))
     return video_preds, video_labels
-
 
 def calculate_metrics(true_labels,predictions,dataset,category):
 
@@ -84,8 +83,31 @@ def main(args):
     # prepare the model (detector)
     model = load_model_from_config(config)
     model = load_checkpoint(config = config, model = model, base_dir = args.base_dir, ckpt_dir = args.ckpt_dir)
-    all_datasets = ["HunyuanVideo", "Open-Sora", "EasyAnimate_I2V", "EasyAnimate_T2V",
-                   "DynamiCrafter", "SVD","CogVideo_T2V","CogVideo_I2V", "Wan2.1", "Luma", "Gen3"]
+    # Define perturbation 
+    perturbation_fn = None
+    perturbation_param = None
+    """
+    if args.perturbation_type!="None" and args.perturbation_level>0:
+        perturbation_param = get_pert_parameter(args.perturbation_type, args.perturbation_level)
+        perturbation_fn = get_pert_function(args.perturbation_type,perturbation_param)
+    """
+
+    if args.cross_dataset=="GenVideo":
+        #Test on genvideo dataset
+        dataset_name = "GenVideo"
+        all_datasets = ["MorphStudio", "Gen2", "HotShot","Lavie", "Show_1","MoonValley","Crafter", "ModelScope", "WildScrape"]
+
+    elif args.cross_dataset=="Vahdati":
+        dataset_name = "Vahdati"
+        all_datasets = ["CogVideo", "Luma", "Pika","SVD", "VideoCrafter","VideoCrafter_v2"]
+
+    elif args.cross_dataset=="GenVidBench":
+        dataset_name = "GenVidBench"
+        all_datasets = datasets = ["Pika", "VideoCrafter2", "Modelscope", "T2V-Zero", "MuseV", "SVD", "CogVideo", "Mora"]
+    else:
+        dataset_name = "Dataset"
+        all_datasets =["HunyuanVideo", "Open-Sora", "EasyAnimate_I2V", "EasyAnimate_T2V","DynamiCrafter", "SVD","CogVideo_T2V","CogVideo_I2V", "Wan2.1", "Luma", "Gen3",
+        "Veo3-T2V", "Veo3-I2V","Sora2-T2V", "Sora2-I2V"]
     results = []
     if args.dataset == "all":
         datasets = all_datasets
@@ -93,22 +115,31 @@ def main(args):
         datasets = [args.dataset]
 
     #Make Predictions for real videos
-    test_loader_real = get_dataloaders_testing(base_dir=os.path.join(args.base_dir,"Dataset"), dataset = "Real", category = args.category,
-                                                frames_sampled = args.frames_sampled, perturbed = args.perturbed, config = config)
+    test_loader_real = get_dataloaders_testing(base_dir=os.path.join(args.base_dir,dataset_name), dataset = "Real", category = args.category,
+                                                frames_sampled = args.frames_sampled, config = config,
+                                                perturbed = args.perturbed, perturbation_fn = perturbation_fn, perturbation_param = perturbation_param,
+                                                cross_dataset = args.cross_dataset)
     predictions_real,true_labels_real = get_predictions(args, model, test_loader_real)
 
-    if args.perturbed == 0:
-        save_dir = os.path.join(args.base_dir, "classification", "results", config['model']['name'], "normal")
+    if config['model']['name'] =="Clip_VPT":
+        model_name = config['model']['name']+ "_" + config['model']['type'] + str(config['backbone']['prompt_length'])
     else:
-        save_dir = os.path.join(args.base_dir, "classification", "results", config['model']['name'], "pert")
+        model_name = config['model']['name']
+
+    if args.perturbed == 0:
+        save_dir = os.path.join(args.base_dir, "classification", "results", model_name, "normal")
+    else:
+        save_dir = os.path.join(args.base_dir, "classification", "results", model_name, "pert")
     os.makedirs(save_dir, exist_ok=True)
     os.makedirs(os.path.join(save_dir,"predictions"), exist_ok=True)
     # Make Predictions for fake videos
     for dataset in datasets:
         # Get data loaders
   
-        test_loader_fake = get_dataloaders_testing(base_dir= os.path.join(args.base_dir,"Dataset"), dataset = dataset, category = args.category,
-                                                frames_sampled = args.frames_sampled, perturbed = args.perturbed, config = config)
+        test_loader_fake = get_dataloaders_testing(base_dir= os.path.join(args.base_dir,dataset_name), dataset = dataset, category = args.category,
+                                                frames_sampled = args.frames_sampled, config = config,
+                                                perturbed = args.perturbed, perturbation_fn = perturbation_fn, perturbation_param = perturbation_param,
+                                                cross_dataset = args.cross_dataset)
         predictions_fake,true_labels_fake = get_predictions(args, model, test_loader_fake)
         result = calculate_metrics(np.concatenate([true_labels_real,true_labels_fake]),
                                     np.concatenate([predictions_real,predictions_fake]),
@@ -121,32 +152,9 @@ def main(args):
         df_predictions.to_csv(predictions_output_path, index=False)    
         results.append(result)
     # Save DataFrame to CSV
-    result_file_name = f"{args.ckpt_dir.split('/')[0]}_{args.ckpt_dir.split('/')[1]}_results.csv"
-    result_file_path = os.path.join(save_dir, result_file_name)
-    # Load existing results if available
-    if os.path.exists(result_file_path):
-        df_existing = pd.read_csv(result_file_path)
-    else:
-        df_existing = pd.DataFrame(columns=["Dataset", "Test Category", "AUC-ROC","Fake Accuracy", "Real Accuracy", "Accuracy",
-                                            "F1 Score", "EER", "AP", "Precision"])
-    # Update or append results
-    for new_result in results:
- 
-        mask = df_existing["Dataset"] == new_result["Dataset"]
-        if mask.any():
-            df_existing.loc[mask, "Test Category"] = new_result["Test Category"]
-            df_existing.loc[mask, "AUC-ROC"] = new_result["AUC-ROC"]
-            df_existing.loc[mask, "Fake Accuracy"] = new_result["Fake Accuracy"]
-            df_existing.loc[mask, "Real Accuracy"] = new_result["Real Accuracy"]
-            df_existing.loc[mask, "Accuracy"] = new_result["Accuracy"]
-            df_existing.loc[mask, "F1 Score"] = new_result["F1 Score"]
-            df_existing.loc[mask, "EER"] = new_result["EER"]
-            df_existing.loc[mask, "AP"] = new_result["AP"]
-            df_existing.loc[mask, "Precision"] = new_result["Precision"]
-        else:
-            df_existing = pd.concat([df_existing, pd.DataFrame([new_result])], ignore_index=True)
-    # Save updated results
-    df_existing.to_csv(result_file_path, index=False)
+    save_results(results = results, save_dir = save_dir, ckpt_dir = args.ckpt_dir, category = args.category,  perturbation_type = args.perturbation_type,
+                 perturbation_level = args.perturbation_level, cross_dataset = args.cross_dataset)
+
 
 if __name__ == '__main__':
 
@@ -154,7 +162,7 @@ if __name__ == '__main__':
     p.add_argument("--base_dir", type=str, default="/sotossta/DecepTIV", help="The base directory")
     p.add_argument('--dataset', type=str,choices= ["CogVideo_T2V", "CogVideo_I2V","Open-Sora","SVD","HunyuanVideo",
                                                    "EasyAnimate_T2V","EasyAnimate_I2V","DynamiCrafter", "Luma",
-                                                   "Gen3","Wan2.1","all"])
+                                                   "Gen3","Wan2.1","Veo3-T2V", "Veo3-I2V", "Sora2-T2V", "Sora2-I2V", "all"])
     p.add_argument("--category", type=str, choices=["Firefighter", "Weather", "Soldier", "all"], default="Firefighter",
                    help="Category of dataset")
     p.add_argument('--perturbed', type=int,choices= [0,1],default=0)  
@@ -164,6 +172,9 @@ if __name__ == '__main__':
                     help='path to detector YAML file')
     p.add_argument('--ckpt_dir', type=str,required=True,help='The directory to model weights')
     p.add_argument('--ckpt_weights', type=str,required=True,help='The name of model weights file')
+    p.add_argument('--perturbation_type', type=str,default = "None",help='Type of the perturbation to apply on the go during testing')
+    p.add_argument('--perturbation_level', type=int,choices = [0,1,2,3,4,5],help='Level of the perturbation to apply on the go during testing')
+    p.add_argument('--cross_dataset', type=str, choices = ["GenVideo","Vahdati", "GenVidBench", "None"], default ="None" ,help='Test trained detector on GenVideo dataset')
     args = p.parse_args()
     print(args)
     main(args)

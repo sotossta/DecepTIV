@@ -90,7 +90,7 @@ def available_models() -> List[str]:
     return list(_MODELS.keys())
 
 
-def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit: bool = False, download_root: str = None):
+def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit: bool = False, download_root: str = None, clip_size: int = None):
     """Load a CLIP model
 
     Parameters
@@ -123,9 +123,10 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     #     raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
 
     model_path = name
-    print(model_path)
+ 
     try:
         # loading JIT archive
+       
         model = torch.jit.load(model_path, map_location=device if jit else "cpu").eval()
         state_dict = None
     except RuntimeError:
@@ -136,7 +137,8 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         state_dict = torch.load(model_path, map_location="cpu")
 
     if not jit:
-        model = build_model(state_dict or model.state_dict()).to(device)
+    
+        model = build_model(state_dict or model.state_dict(), clip_size = clip_size).to(device)
         if str(device) == "cpu":
             model.float()
         return model, _transform(model.visual.input_resolution)
