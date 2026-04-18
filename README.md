@@ -274,11 +274,6 @@ python test.py \
     --ckpt_weights model_epoch8_val0.9995.tar
 ```
 
-| `--cross_dataset` value | Benchmark | Generators included |
-|------------------------|-----------|---------------------|
-| `GenVideo` | GenVideo | MorphStudio, Gen2, HotShot, Lavie, Show_1, MoonValley, Crafter, ModelScope, WildScrape |
-| `Vahdati` | Vahdati et al. | CogVideo, Luma, Pika, SVD, VideoCrafter, VideoCrafter_v2 |
-| `GenVidBench` | GenVidBench | Pika, VideoCrafter2, Modelscope, T2V-Zero, MuseV, SVD, CogVideo, Mora |
 
 ### Testing arguments
 
