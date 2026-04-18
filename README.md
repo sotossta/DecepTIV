@@ -2,8 +2,6 @@
 
 Official code of: *DecepTIV: A Large-Scale Benchmark for Robust Detection of T2V and I2V Synthetic Videos*
 
----
-
 ## Table of Contents
 
 1. [Dataset](#dataset)
