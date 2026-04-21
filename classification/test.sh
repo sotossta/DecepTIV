@@ -4,7 +4,7 @@ trained_category="all"
 test_dataset="all"
 test_category="all"
 perturbed=0
-weights="model_epoch4_val0.9977.tar"
+weights="model_epoch8_val0.9995.tar"
 
 
 python test.py \
@@ -12,7 +12,7 @@ python test.py \
     --dataset "${test_dataset}"\
     --category "${test_category}" \
     --perturbed "${perturbed}" \
-    --frames_sampled 42 \
-    --detector_config '/sotossta/DecepTIV/classification/configs/f3net.yaml' \
+    --frames_sampled 10 \
+    --detector_config '/sotossta/DecepTIV/classification/configs/efficientnetb4.yaml' \
     --ckpt_dir "${trained_on}/${trained_category}" \
     --ckpt_weights "${weights}" 
