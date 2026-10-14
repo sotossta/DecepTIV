@@ -21,7 +21,7 @@ def get_dataloaders(base_dir, dataset, category, frames_sampled, config, balance
     if balanced ==0:
             frames_sampled_fake = frames_sampled_real
     else:
-        if dataset in ["Open-Sora", "HunyuanVideo", "all"]:
+        if dataset in ["Open-Sora", "HunyuanVideo"]:
             frames_sampled_fake = frames_sampled_real
         elif dataset in ["EasyAnimate_T2V", "EasyAnimate_I2V"]:
             frames_sampled_fake = frames_sampled_real//2
