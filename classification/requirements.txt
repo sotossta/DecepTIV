@@ -12,3 +12,4 @@ pandas
 timm
 ftfy
 regex
+einops
